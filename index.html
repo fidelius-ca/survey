@@ -272,7 +272,7 @@
   <header class="top" id="intro">
     <p class="eyebrow">Tiny Fest &middot; Sept 12&ndash;13, 2026</p>
     <h1>How was <em>Tiny Fest 2026?</em></h1>
-    <p class="lede">Thanks for attending and supporting us. This takes about three minutes, and only the first question is required.</p>
+    <p class="lede">Thanks for frolicking with us. This takes about three minutes, and only the first question is required.</p>
     <p class="lede">Your answers decide what we keep, fix, and add for the next one.</p>
   </header>
 
@@ -427,6 +427,10 @@
           <input type="checkbox" id="unsubscribe" name="unsubscribe" value="Yes">
           <span>Opt out of Tiny Fest emails, if you received this survey through email.</span>
         </label>
+        <div class="cond" id="unsub-cond" hidden>
+          <label class="label" for="unsubscribe_email" style="font-size:1rem">Which email should we remove?</label>
+          <input type="email" id="unsubscribe_email" name="unsubscribe_email" inputmode="email" autocomplete="email" placeholder="you@example.com" maxlength="200">
+        </div>
       </div>
 
       <div class="q" data-q>
@@ -450,7 +454,7 @@
 
   <section class="thanks" id="thanks" hidden aria-live="polite" tabindex="-1">
     <p class="eyebrow">Received</p>
-    <h2>Thank you!!!</h2>
+    <h2>Thank you, frolicker.</h2>
     <p>Every answer gets read by a person. We will fold what you told us into the next one.</p>
     <p>Got photos or videos from Tiny Fest? We would love to see them.</p>
     <a class="cta" href="https://upload.tinyfest.xyz" target="_blank" rel="noopener">Share photos and videos</a>
@@ -497,6 +501,9 @@
   const camped = document.getElementById("camped");
   const campRow = document.getElementById("row-camping");
   const subscribeEmail = document.getElementById("subscribe_email");
+  const unsubscribe = document.getElementById("unsubscribe");
+  const unsubCond = document.getElementById("unsub-cond");
+  const unsubscribeEmail = document.getElementById("unsubscribe_email");
 
   function collect() {
     const data = {};
@@ -512,12 +519,14 @@
 
   function updateUI() {
     campRow.hidden = !camped.checked;
+    unsubCond.hidden = !unsubscribe.checked;
+    if (!unsubscribe.checked) unsubscribeEmail.value = "";
 
     const groups = form.querySelectorAll("[data-q]");
     let done = 0;
     groups.forEach(g => {
-      const t = g.querySelector("textarea, input[type=email]");
-      if (t ? t.value.trim() : g.querySelector("input:checked")) done++;
+      const filled = [...g.querySelectorAll("textarea, input[type=email]")].some((t) => t.value.trim());
+      if (filled || g.querySelector("input:checked")) done++;
     });
     if (form.querySelector('#rows input:checked')) done++;
     bar.style.width = Math.round(done / (groups.length + 1) * 100) + "%";
@@ -539,6 +548,20 @@
       return;
     }
     errOverall.hidden = true;
+
+    if (data.unsubscribe === "Yes" && !data.unsubscribe_email) {
+      errSend.textContent = "Add the email you want removed so we can actually opt you out.";
+      errSend.hidden = false;
+      unsubscribeEmail.focus();
+      return;
+    }
+
+    if (data.unsubscribe_email && !form.unsubscribe_email.checkValidity()) {
+      errSend.textContent = "That email address looks off. Fix it or clear the box.";
+      errSend.hidden = false;
+      unsubscribeEmail.focus();
+      return;
+    }
 
     if (data.subscribe_email && !form.subscribe_email.checkValidity()) {
       errSend.textContent = "That email address looks off. Fix it or clear the box to skip it.";
